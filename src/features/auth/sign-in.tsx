@@ -10,6 +10,9 @@ import { BsApple } from 'react-icons/bs';
 import { BsFacebook } from "react-icons/bs";
 import CarParkLogoIcon from '@/icons/car-icon';
 import { IoCaretForward } from "react-icons/io5";
+import { useState } from 'react';
+import { signIn } from 'next-auth/react';
+
 
 const schema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -19,13 +22,24 @@ const schema = z.object({
 type SignInData = z.infer<typeof schema>;
 
 export default function SignInForm({setShowSignIn}:{setShowSignIn:(val: boolean)=>void}) {
+  const [serverError, setServerError] = useState<string | null>(null);
+
   const { register, handleSubmit, formState: { errors, isValid } } = useForm<SignInData>({
     resolver: zodResolver(schema),
   });
 
-  const onSubmit = (data: SignInData) => {
-    console.log(data);
-  };
+  const onSubmit = async (data: SignInData) => {
+  const res = await signIn("credentials", {
+    redirect: true,
+    callbackUrl: "/dashboard", // or "/dashboard"
+    name: data.username,
+    password: data.password,
+  });
+
+  if (res?.error) {
+    setServerError("Invalid credentials");
+  }
+};
 
   return (
       <div className="space-y-3 text-center">
@@ -48,7 +62,7 @@ export default function SignInForm({setShowSignIn}:{setShowSignIn:(val: boolean)
 
               {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
             </div>
-
+             {serverError && <p className="text-red-500 text-center">{serverError}</p>}
             <Button
               type="submit"
               className={`w-full cursor-pointer transform transition-transform duration-300 hover:scale-105 active:scale-100 hover:text-gray-300 gap-1 flex items-center justify-center ${isValid && 'bg-slate-600'}`}

@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id            String           @id @default(cuid())
+  email         String?           @unique
+  name          String           @unique
+  passwordHash  String
+  createdAt     DateTime         @default(now())
+  parkingSessions ParkingSession[]
+}
+
+model ParkingSpot {
+  id          String         @id @default(cuid())
+  label       String         @unique // e.g., "A1", "B2"
+  isOccupied  Boolean        @default(false)
+  sensorId    String?        @unique
+  sensor      Sensor?        @relation(fields: [sensorId], references: [id])
+  sessions    ParkingSession[]
+}
+
+model Sensor {
+  id            String         @id @default(cuid())
+  name          String         @unique // e.g., "sensor-a1"
+  lastPingedAt  DateTime?
+  parkingSpot   ParkingSpot?
+}
+
+model ParkingSession {
+  id            String         @id @default(cuid())
+  userId        String
+  parkingSpotId String
+  startTime     DateTime       @default(now())
+  endTime       DateTime?
+  user          User           @relation(fields: [userId], references: [id])
+  parkingSpot   ParkingSpot    @relation(fields: [parkingSpotId], references: [id])
+}
