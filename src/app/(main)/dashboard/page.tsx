@@ -6,7 +6,7 @@ export default function Page() {
   const { data: session, status } = useSession();
 
   if (status === "loading") {
-    return <p>Loading....</p>;
+    return <p>Loading...</p>;
   }
 
   if (status === "authenticated") {
